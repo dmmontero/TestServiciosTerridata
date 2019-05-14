@@ -1,4 +1,5 @@
 ﻿using RestSharp;
+using RestSharp.Serialization.Json;
 using RestSharp.Serialization.Xml;
 using System;
 using System.Collections.Generic;
@@ -16,7 +17,11 @@ namespace TestServiciosTerridata
             var client = new RestClient("http://geoservicios.upra.gov.co/arcgis/rest/services/ordenamiento_productivo/frontera_agricola_abril_2018/MapServer/0/query");
             // client.Authenticator = new HttpBasicAuthenticator(username, password);
 
-            var request = new RestRequest(Method.POST);
+            var request = new RestRequest(Method.POST) { RequestFormat = DataFormat.Json };
+            request.JsonSerializer = new JsonSerializer();
+
+
+
             request.AddParameter("f", "json"); // adds to POST or URL querystring based on Method
             request.AddParameter("outFields", "cod_depart,departamen,area_ha,elemento"); // adds to POST or URL querystring based on Method
             request.AddParameter("outSr", 4326); // adds to POST or URL querystring based on Method
@@ -25,12 +30,13 @@ namespace TestServiciosTerridata
 
 
             // easily add HTTP Headers
-            //request.AddHeader("header", "value");
+            request.AddHeader("header", "value");
 
-            client.UseDotNetXmlSerializer();
+            //client.UseDotNetXmlSerializer();
 
             // execute the request
-            IRestResponse response = client.Execute<Features>(request);
+            IRestResponse response = client.Execute(request);
+            //IRestResponse response = client.Execute<Features>(request);
             var content = response.Content; // raw content as string
 
             // or automatically deserialize result
