@@ -4,6 +4,6 @@ namespace TestServiciosTerridata.models
 {
     public class Features
     {
-        public List<Attributes> Images { get; set; }
+        public List<Attributes> Attributes { get; set; }
     }
 }

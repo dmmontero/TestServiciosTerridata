@@ -1,11 +1,8 @@
-﻿using RestSharp;
-using RestSharp.Serialization.Json;
-using RestSharp.Serialization.Xml;
+﻿using Newtonsoft.Json;
+using RestSharp;
+using RestSharp.Serialization;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TestServiciosTerridata.models;
 
 namespace TestServiciosTerridata
@@ -18,9 +15,6 @@ namespace TestServiciosTerridata
             // client.Authenticator = new HttpBasicAuthenticator(username, password);
 
             var request = new RestRequest(Method.POST) { RequestFormat = DataFormat.Json };
-            request.JsonSerializer = new JsonSerializer();
-
-
 
             request.AddParameter("f", "json"); // adds to POST or URL querystring based on Method
             request.AddParameter("outFields", "cod_depart,departamen,area_ha,elemento"); // adds to POST or URL querystring based on Method
@@ -28,32 +22,44 @@ namespace TestServiciosTerridata
             request.AddParameter("returnGeometry", false); // adds to POST or URL querystring based on Method
             request.AddParameter("where", "elemento = 'Frontera agrícola nacional'"); // adds to POST or URL querystring based on Method
 
-
             // easily add HTTP Headers
-            request.AddHeader("header", "value"); 
-
-            //client.UseDotNetXmlSerializer();
+            //request.AddHeader("header", "value");
 
             // execute the request
             IRestResponse response = client.Execute(request);
             //IRestResponse response = client.Execute<Features>(request);
             var content = response.Content; // raw content as string
 
-            // or automatically deserialize result
-            // return content type is sniffed but can be explicitly set via RestClient.AddHandler();
+            client.UseJson();
+            var response2 = client.Execute<List<Attributes>>(request);
+            if (response2.ErrorException != null)
+            {
+                const string message = "Error retrieving response.  Check inner details for more info.";
+                var terridateException = new ApplicationException(message, response2.ErrorException);
+                throw terridateException;
+            }
+            var _data = response2.Data;
+        }
 
-            //var respuesta = client.Execute(request);
-            //RestResponse<Person> response2 = client.Execute<Person>(request);
-            //var name = response2.Data.Name;
+        public class JsonNetSerializer : IRestSerializer
+        {
+            public string Serialize(object obj) =>
+                JsonConvert.SerializeObject(obj);
 
-            // easy async support
-            //client.ExecuteAsync(request, response => { Console.WriteLine(response.Content); });
+            public string Serialize(Parameter parameter) =>
+                JsonConvert.SerializeObject(parameter.Value);
 
-            // async with deserialization
-            //var asyncHandle = client.ExecuteAsync<Person>(request, response => {Console.WriteLine(response.Data);});
+            public T Deserialize<T>(IRestResponse response) =>
+                JsonConvert.DeserializeObject<T>(response.Content);
 
-            // abort the request on demand
-            //asyncHandle.Abort();
+            public string[] SupportedContentTypes { get; } =
+            {
+                "application/json", "text/json", "text/x-json", "text/javascript", "*+json"
+            };
+
+            public string ContentType { get; set; } = "application/json";
+
+            public DataFormat DataFormat { get; } = DataFormat.Json;
         }
     }
 }
