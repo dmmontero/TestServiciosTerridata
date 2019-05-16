@@ -11,6 +11,31 @@ namespace TestServiciosTerridata
     {
         static void Main(string[] args)
         {
+            //ObtenerdataFronteraAgricola();
+            ObtenerDataSinergia();
+        }
+
+        private static void ObtenerDataSinergia()
+        {
+            var client = new RestClient("https://serviciossinergia.dnp.gov.co/ServicioSeguimientoRest.svc/ObtenerPeriodosPresidenciales");
+            var request = new RestRequest(Method.POST) { RequestFormat = DataFormat.Json };
+
+            request.AddJsonBody("{ \"Params\": [{\"Llave\": \"idMapa\",\"Valor\": 4}]}");
+            IRestResponse response = client.Execute(request);
+
+            client.UseJson();
+            var response2 = client.Execute<Periodos>(request);
+            if (response2.ErrorException != null)
+            {
+                const string message = "Error retrieving response.  Check inner details for more info.";
+                var terridateException = new ApplicationException(message, response2.ErrorException);
+                throw terridateException;
+            }
+            var _data = response2.Data;
+
+        }
+        private static void ObtenerdataFronteraAgricola()
+        {
             var client = new RestClient("http://geoservicios.upra.gov.co/arcgis/rest/services/ordenamiento_productivo/frontera_agricola_abril_2018/MapServer/0/query");
             // client.Authenticator = new HttpBasicAuthenticator(username, password);
 
