@@ -1,8 +1,11 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Schema;
 using RestSharp;
 using RestSharp.Serialization;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using TestServiciosTerridata.models;
 
 namespace TestServiciosTerridata
@@ -20,11 +23,27 @@ namespace TestServiciosTerridata
             var client = new RestClient("https://serviciossinergia.dnp.gov.co/ServicioSeguimientoRest.svc/ObtenerPeriodosPresidenciales");
             var request = new RestRequest(Method.POST) { RequestFormat = DataFormat.Json };
 
+            request.AddHeader("Content-Type", "application/json");
+
             request.AddJsonBody("{ \"Params\": [{\"Llave\": \"idMapa\",\"Valor\": 4}]}");
+
             IRestResponse response = client.Execute(request);
 
-            client.UseJson();
-            var response2 = client.Execute<Periodos>(request);
+            var content = @response.Content;
+
+            var obj = JToken.Parse(content);
+            JObject rss = JObject.Parse(obj.ToString());
+            JArray p = (JArray)rss["Periodos"];
+
+            var settings = new JsonSerializerSettings();
+            settings.Formatting = Newtonsoft.Json.Formatting.Indented;
+            settings.StringEscapeHandling = StringEscapeHandling.Default;
+
+            //DataSet dataSet = JsonConvert.DeserializeObject<DataSet>(obj.ToString(), settings);
+
+            var periodosDto = JsonConvert.DeserializeObject<List<Periodo>>(p.ToString(), new PeriodoConverter());
+
+            var response2 = client.Execute<RespuestaPeriodos>(request);
             if (response2.ErrorException != null)
             {
                 const string message = "Error retrieving response.  Check inner details for more info.";
@@ -37,7 +56,6 @@ namespace TestServiciosTerridata
         private static void ObtenerdataFronteraAgricola()
         {
             var client = new RestClient("http://geoservicios.upra.gov.co/arcgis/rest/services/ordenamiento_productivo/frontera_agricola_abril_2018/MapServer/0/query");
-            // client.Authenticator = new HttpBasicAuthenticator(username, password);
 
             var request = new RestRequest(Method.POST) { RequestFormat = DataFormat.Json };
 
@@ -47,13 +65,19 @@ namespace TestServiciosTerridata
             request.AddParameter("returnGeometry", false); // adds to POST or URL querystring based on Method
             request.AddParameter("where", "elemento = 'Frontera agrícola nacional'"); // adds to POST or URL querystring based on Method
 
-            // easily add HTTP Headers
-            //request.AddHeader("header", "value");
-
+           
             // execute the request
             IRestResponse response = client.Execute(request);
-            //IRestResponse response = client.Execute<Features>(request);
             var content = response.Content; // raw content as string
+
+            var obj = JToken.Parse(content);
+            JObject rss = JObject.Parse(obj.ToString());
+            JArray p = (JArray)rss["Periodos"];
+
+            var settings = new JsonSerializerSettings();
+            settings.Formatting = Newtonsoft.Json.Formatting.Indented;
+            settings.StringEscapeHandling = StringEscapeHandling.Default;
+
 
             client.UseJson();
             var response2 = client.Execute<List<Attributes>>(request);

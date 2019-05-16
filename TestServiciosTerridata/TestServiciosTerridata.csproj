@@ -53,7 +53,9 @@
     <Compile Include="models\Attributes.cs" />
     <Compile Include="models\Features.cs" />
     <Compile Include="models\Periodo.cs" />
+    <Compile Include="models\PeriodoConverter.cs" />
     <Compile Include="models\Periodos.cs" />
+    <Compile Include="models\RespuestaPeriodos.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
