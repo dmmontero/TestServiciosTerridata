@@ -1,11 +1,10 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Schema;
 using RestSharp;
 using RestSharp.Serialization;
 using System;
 using System.Collections.Generic;
-using System.Data;
+using System.Linq;
 using TestServiciosTerridata.models;
 
 namespace TestServiciosTerridata
@@ -14,8 +13,8 @@ namespace TestServiciosTerridata
     {
         static void Main(string[] args)
         {
-            //ObtenerdataFronteraAgricola();
-            ObtenerDataSinergia();
+            ObtenerdataFronteraAgricola();
+            //ObtenerDataSinergia();
         }
 
         private static void ObtenerDataSinergia()
@@ -65,29 +64,43 @@ namespace TestServiciosTerridata
             request.AddParameter("returnGeometry", false); // adds to POST or URL querystring based on Method
             request.AddParameter("where", "elemento = 'Frontera agrícola nacional'"); // adds to POST or URL querystring based on Method
 
-           
+
             // execute the request
             IRestResponse response = client.Execute(request);
-            var content = response.Content; // raw content as string
+            var content = @response.Content; // raw content as string
 
             var obj = JToken.Parse(content);
-            JObject rss = JObject.Parse(obj.ToString());
-            JArray p = (JArray)rss["Periodos"];
+            JObject features = JObject.Parse(obj.ToString());
+
+            JArray p = (JArray)features["features"];
+
+            IEnumerable<JToken> la = p.Select(c => (c["attributes"]));
+
+            // serialize JSON results into .NET objects
+            IList<Attributes> lstAttributes = new List<Attributes>();
+            foreach (JToken attr in la)
+            {
+                // JToken.ToObject is a helper method that uses JsonSerializer internally
+                Attributes _atribute = attr.ToObject<Attributes>();
+                lstAttributes.Add(_atribute);
+            }
 
             var settings = new JsonSerializerSettings();
             settings.Formatting = Newtonsoft.Json.Formatting.Indented;
             settings.StringEscapeHandling = StringEscapeHandling.Default;
 
+            var attributesDto = JsonConvert.DeserializeObject<List<Attributes>>(la.ToString(), new AttributesConverter());
 
-            client.UseJson();
-            var response2 = client.Execute<List<Attributes>>(request);
-            if (response2.ErrorException != null)
-            {
-                const string message = "Error retrieving response.  Check inner details for more info.";
-                var terridateException = new ApplicationException(message, response2.ErrorException);
-                throw terridateException;
-            }
-            var _data = response2.Data;
+            int size = attributesDto.Count;
+            //client.UseJson();
+            //var response2 = client.Execute<List<Attributes>>(request);
+            //if (response2.ErrorException != null)
+            //{
+            //    const string message = "Error retrieving response.  Check inner details for more info.";
+            //    var terridateException = new ApplicationException(message, response2.ErrorException);
+            //    throw terridateException;
+            //}
+            //var _data = response2.Data;
         }
 
         public class JsonNetSerializer : IRestSerializer

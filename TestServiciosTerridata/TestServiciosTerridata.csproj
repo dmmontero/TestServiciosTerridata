@@ -51,6 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="models\Attributes.cs" />
+    <Compile Include="models\AttributesConverter.cs" />
     <Compile Include="models\Features.cs" />
     <Compile Include="models\Periodo.cs" />
     <Compile Include="models\PeriodoConverter.cs" />
