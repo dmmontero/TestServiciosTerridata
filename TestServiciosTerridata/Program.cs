@@ -72,6 +72,12 @@ namespace TestServiciosTerridata
             var obj = JToken.Parse(content);
             JObject features = JObject.Parse(obj.ToString());
 
+            var attributes = from f in features["features"]
+                             select (f["attributes"]);
+            //select f["attributes"];
+
+
+
             JArray p = (JArray)features["features"];
 
             IEnumerable<JToken> la = p.Select(c => (c["attributes"]));
