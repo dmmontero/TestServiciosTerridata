@@ -88,9 +88,8 @@ namespace TestServiciosTerridata
             //select f["attributes"];
 
 
-            var xxx = features["features"].Select(c => c["attributes"]).ToList();
 
-            var p = features["features"].Select(c => c["attributes"]).Select(attr => new Attributes
+            var attrList = features["features"].Select(c => c["attributes"]).Select(attr => new Attributes
             {
                 Cod_Depart = (string)attr["cod_depart"],
                 Departamen = (string)attr["departamen"],
@@ -98,6 +97,20 @@ namespace TestServiciosTerridata
                 Elemento = (string)attr["elemento"]
             }).ToList();
 
+            var query = (from at in attrList
+                         group at by new { at.Cod_Depart, at.Departamen }
+                        into grp
+                         orderby grp.Key.Cod_Depart
+                         select new
+                         {
+                             grp.Key.Cod_Depart,
+                             grp.Key.Departamen,
+                             Area = grp.Sum(a => a.Area_Ha)
+
+                         }
+                         ).ToList();
+
+            int cantidad = query.Count();
 
 
 
