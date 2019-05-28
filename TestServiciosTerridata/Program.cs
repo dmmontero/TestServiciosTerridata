@@ -34,9 +34,11 @@ namespace TestServiciosTerridata
             JObject rss = JObject.Parse(obj.ToString());
             JArray p = (JArray)rss["Periodos"];
 
-            var settings = new JsonSerializerSettings();
-            settings.Formatting = Newtonsoft.Json.Formatting.Indented;
-            settings.StringEscapeHandling = StringEscapeHandling.Default;
+            var settings = new JsonSerializerSettings
+            {
+                Formatting = Newtonsoft.Json.Formatting.Indented,
+                StringEscapeHandling = StringEscapeHandling.Default
+            };
 
             //DataSet dataSet = JsonConvert.DeserializeObject<DataSet>(obj.ToString(), settings);
 
@@ -72,32 +74,51 @@ namespace TestServiciosTerridata
             var obj = JToken.Parse(content);
             JObject features = JObject.Parse(obj.ToString());
 
-            var attributes = from f in features["features"] select f;
+            //var a = (JArray)features["features"][0]["attributes"];
+
+            //JToken acme = features.SelectToken("$.features");
+
+            //var attributes = from f in features["features"].SelectMany(i => i["attributes"]).Values<string>()
+            //                 group f by f
+            //                 into g
+            //                 orderby g.Count() descending
+            //                 select new { CodigoDepartamento = g.cod_depart, Count = g.Count() };
+
             //select (f["attributes"]) into atributes
             //select f["attributes"];
 
 
+            var xxx = features["features"].Select(c => c["attributes"]).ToList();
 
-            JArray p = (JArray)features["features"];
-
-            IEnumerable<JToken> la = p.Select(c => (c["attributes"]));
-
-            // serialize JSON results into .NET objects
-            IList<Attributes> lstAttributes = new List<Attributes>();
-            foreach (JToken attr in la)
+            var p = features["features"].Select(c => c["attributes"]).Select(attr => new Attributes
             {
-                // JToken.ToObject is a helper method that uses JsonSerializer internally
-                Attributes _atribute = attr.ToObject<Attributes>();
-                lstAttributes.Add(_atribute);
-            }
+                Cod_Depart = (string)attr["cod_depart"],
+                Departamen = (string)attr["departamen"],
+                Area_Ha = (double)attr["area_ha"],
+                Elemento = (string)attr["elemento"]
+            }).ToList();
 
-            var settings = new JsonSerializerSettings();
-            settings.Formatting = Newtonsoft.Json.Formatting.Indented;
-            settings.StringEscapeHandling = StringEscapeHandling.Default;
 
-            var attributesDto = JsonConvert.DeserializeObject<List<Attributes>>(la.ToString(), new AttributesConverter());
 
-            int size = attributesDto.Count;
+
+            //// serialize JSON results into .NET objects
+            //IList<Attributes> lstAttributes = new List<Attributes>();
+            //foreach (JToken attr in la)
+            //{
+            //    // JToken.ToObject is a helper method that uses JsonSerializer internally
+            //    Attributes _atribute = attr.ToObject<Attributes>();
+            //    lstAttributes.Add(_atribute);
+            //}
+
+            //var settings = new JsonSerializerSettings
+            //{
+            //    Formatting = Newtonsoft.Json.Formatting.Indented,
+            //    StringEscapeHandling = StringEscapeHandling.Default
+            //};
+
+            //var attributesDto = JsonConvert.DeserializeObject<List<Attributes>>(la.ToString(), new AttributesConverter());
+
+            //int size = attributesDto.Count;
             //client.UseJson();
             //var response2 = client.Execute<List<Attributes>>(request);
             //if (response2.ErrorException != null)
